@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  mongo:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    restart: always
+
+  backend:
+    build: .
+    container_name: insighthub_app
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${APP_PORT:-8000} --reload
+    env_file: .env
+    volumes:
+      - .:/app
+    ports:
+      - "8000:${APP_PORT:-8000}"
+    depends_on:
+      - postgres
+      - mongo
+  volumes:
+    pgdata:
+    mongodata:
